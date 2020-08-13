@@ -1,0 +1,10 @@
+source "https://rubygems.org"
+
+gem 'httparty'
+gem 'nokogiri'
+gem 'byebug'
+gem 'warning'
+gem 'progress_bar'
+gem 'builder'
+gem 'wkhtmltopdf-binary'
+gem 'wisepdf'
