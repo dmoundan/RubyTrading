@@ -18,6 +18,9 @@ require 'nokogiri'
 require 'byebug'
 require 'builder'
 require "wisepdf"
+require 'time'
+#require 'yahoofinance'
+#require 'yahoo-finance'
 
 
 
@@ -328,6 +331,67 @@ def getDaysOfWeek(start)
     return arr1
 end
 
+
+
+
+
+def getYFHistoricalData()
+=begin
+    YahooFinance::get_historical_quotes( 'AAPL',
+                                      Date.parse( '2020-08-14' ),
+                                      Date.today() ) do |row|
+  puts "AAPL,#{row.join(',')}"
+end
+
+yahoo_client = YahooFinance::Client.new
+data = yahoo_client.historical_quotes("AAPL", { start_date: Time::now-(24*60*60*10), end_date: Time::now }) # 10 days worth of data
+puts(data)
+=end
+    base_url="https://finance.yahoo.com"
+    ticker="AAPL"
+    interval="1d"  #or 1wk 1mo
+    filter="history"
+    frequency="1d" #or 1wk 1mo
+
+    period1=Time.new(2015,8,3).to_i.to_s
+    period2=Time.new(2020,8,18).to_i.to_s
+    subdomain="/quote/#{ticker}/history?period1=#{period1}&period2=#{period2}&interval=#{interval}&filter=#{filter}&frequency=#{frequency}"
+    final_url=base_url+subdomain
+    unparsed_page=HTTParty.get(final_url)
+    parsed_page=Nokogiri::HTML(unparsed_page)
+#hdrs=create_header(subdomain)
+    results=Hash.new
+    keys_arr=Array.new
+    list_of_tables=parsed_page.search('table')
+    table=list_of_tables[0]
+    count=0
+    count1=0
+    table.search('tr').each do |tr|
+        count1=0
+        collection=tr.search('th, td')
+        collection.each do |cell|
+            if count == 0
+                str1=cell.text.strip
+                if str1.include? "*"
+                    str1.delete! '*'
+                end
+                keys_arr << str1
+                results[str1]=Array.new
+            else
+                if collection.count == keys_arr.count
+                    results[keys_arr[count1]] << cell.text.strip
+                else
+                    break
+                end
+            end    
+            count1+=1
+        end
+        count+=1
+    end    
+    puts(results) 
+end
+
+
 #scraper_SP%00List()
 #scraper_AllWeeklyOptionable()
 #scraper_AllOptionables()
@@ -337,7 +401,9 @@ end
 #weeklyEarnings()
 #scraper_CompanyData("AAPL")
 #getDaysOfWeek("2020-8-3")
+getYFHistoricalData()
 
+=begin
 def main()
     options = {}
     optparse = OptionParser.new do |opts|
@@ -349,3 +415,4 @@ def main()
         end    
     end
 end
+=end
