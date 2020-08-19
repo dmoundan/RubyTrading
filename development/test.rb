@@ -403,6 +403,30 @@ puts(data)
     puts(my_data) 
 end
 
+def getYFHistoricalData2()
+    base_url="https://finance.yahoo.com"
+    ticker="AAPL"
+    interval="1d"  #or 1wk 1mo
+    filter="history"
+    frequency="1d" #or 1wk 1mo
+
+#crumb_link = "https://finance.yahoo.com/quote/#{ticker}/history?p=#{ticker}"
+   
+
+    period1=Time.new(2015,8,3).to_i.to_s
+    period2=Time.new(2020,8,18).to_i.to_s
+    subdomain="/quote/#{ticker}/history?period1=#{period1}&period2=#{period2}&interval=#{interval}&filter=#{filter}&frequency=#{frequency}"
+    final_url=base_url+subdomain
+    unparsed_page=HTTParty.get(final_url)
+    /CrumbStore":{"crumb":"(.*?)"}/.match(unparsed_page)
+    crumb=$1
+    puts($1)
+    final_url1=final_url+"&crumb=#{crumb}"
+    unparsed_page1=HTTParty.get(final_url1)
+    puts(unparsed_page1)
+    
+end
+
 
 #scraper_SP%00List()
 #scraper_AllWeeklyOptionable()
@@ -413,7 +437,8 @@ end
 #weeklyEarnings()
 #scraper_CompanyData("AAPL")
 #getDaysOfWeek("2020-8-3")
-getYFHistoricalData()
+#getYFHistoricalData()
+getYFHistoricalData2()
 
 =begin
 def main()
