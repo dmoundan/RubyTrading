@@ -21,6 +21,7 @@ require "wisepdf"
 require 'time'
 #require 'yahoofinance'
 #require 'yahoo-finance'
+require 'json'
 
 
 
@@ -388,7 +389,18 @@ puts(data)
         end
         count+=1
     end    
-    puts(results) 
+    #puts(results)
+    /HistoricalPriceStore":{"prices":(.*?\])/.match(unparsed_page)
+    my_data=JSON.parse($1)
+    my_data.each do |hash|
+        hash.each do |key, value|
+            if key == "date"
+                value1=Time.at(value).to_date.to_s 
+                hash[key]=value1
+            end
+        end
+    end    
+    puts(my_data) 
 end
 
 
