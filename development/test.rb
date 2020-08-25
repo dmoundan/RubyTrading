@@ -2,6 +2,7 @@
 
 $VERBOSE=nil
 
+
 =begin
 require 'warning'
 Gem.path.each do |path|
@@ -9,6 +10,10 @@ Gem.path.each do |path|
 end
 =end
 
+require 'rubygems'
+require 'bundler/setup'
+
+require 'builder'
 require 'optparse'
 require 'set'
 require 'zlib'
@@ -16,12 +21,11 @@ require 'progress_bar'
 require 'httparty'
 require 'nokogiri'
 require 'byebug'
-require 'builder'
 require "wisepdf"
 require 'time'
-#require 'yahoofinance'
-#require 'yahoo-finance'
 require 'json'
+require 'daru'
+require 'sqlite3'
 
 
 
@@ -423,7 +427,7 @@ def getYFHistoricalData2()
     puts($1)
     final_url1=final_url+"&crumb=#{crumb}"
     unparsed_page1=HTTParty.get(final_url1)
-    puts(unparsed_page1)
+    #puts(unparsed_page1)
     
 end
 
