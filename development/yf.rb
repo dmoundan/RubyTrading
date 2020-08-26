@@ -48,7 +48,8 @@ class YF
             end
             count+=1
         end   
-        puts(results) 
+        df=Daru::DataFrame.new(results)
+        return df
     end
 
     def get_prices_long()
@@ -82,6 +83,16 @@ class YF
         final_url=Base_URL+subdomain
         unparsed_page=HTTParty.get(final_url)
         return unparsed_page
+    end
+
+    def get_dataframe(results)
+=begin
+        df=Daru::DataFrame.new(results)
+        puts(df.row[0]["Date"])
+        puts(df.ncols)
+        puts(df.nrows)
+        puts(df.inspect())
+=end
     end
 
 end
