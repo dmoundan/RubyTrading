@@ -32,14 +32,13 @@ class YF
             collection.each do |cell|
                 if count == 0
                     str1=cell.text.strip
-                    if str1.include? "*"
-                        str1.delete! '*'
-                    end
+                    str1.delete! "*" if str1.include? "*"
+                    str1.delete! " " if str1.include? " "
                     keys_arr << str1
                     results[str1]=Array.new
                 else
                     if collection.count == keys_arr.count
-                        results[keys_arr[count1]] << cell.text.strip
+                        results[keys_arr[count1]].unshift(cell.text.strip)
                     else
                         break
                     end
