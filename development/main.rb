@@ -9,6 +9,7 @@ require 'set'
 require "./development/yf.rb"
 require "./development/database.rb"
 require "./development/utilities.rb"
+require './development/finviz.rb'
 
 #Constants
 Text_file_path="./Collateral"
@@ -22,6 +23,8 @@ def main()
     options = Slop.parse do |opts|
         opts.string '-a', '--read_text_file', 'Parse a list of symbols in a text file'
         opts.string '-b', '--timeframe', 'Provide a timeframe [1d, 1wk, 1mo]'
+        opts.string '-c', '--earnings', 'Discover earnings for [this_week, next_week, this_month]'
+        opts.string '-d', '--intersect_with', 'Intersect earnings names with [text_file]'
         opts.bool '-h', '--help', 'Print this help message'
     end
 
@@ -34,7 +37,20 @@ def main()
         read_text_file(Text_file_path+"/"+options[:read_text_file], list1)
         puts(list1)
     end
-    puts(options)
+
+    if options[:intersect_with]
+        read_text_file(Text_file_path+"/"+options[:intersect_with], list1)
+    end
+
+    if options[:earnings]
+        if !options[:intersect_with]
+            puts("-E- --intersect_with option required. Exiting.")
+            exit(1)
+        end
+        fv=Finviz.new
+        fv.weeklyEarnings(list1, options[:earnings])
+    end
+    #puts(options)
 
 =begin    
     acc1=YF.new("AAPL", "2020-08-17", "2020-08-22", "1d")
