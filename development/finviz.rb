@@ -4,12 +4,14 @@ require 'progress_bar'
 require 'httparty'
 require 'nokogiri'
 require 'daru'
+require "wisepdf"
 
 class Finviz
 
     Base_url="https://finviz.com/"
 
     def weeklyEarnings(intersect_list, period="next_week")
+        earnings_labels=[:date, :ticker, :time, :sfloat, :atr, :beta]
         earningsNextWeek = Set.new
         scraper_EarnnigsNextWeek(earningsNextWeek, period)
         puts(earningsNextWeek.count)
@@ -55,8 +57,25 @@ class Finviz
                 end
             end
             bar.increment!
-        end    
-        puts(arr)
+        end   
+        final_hash=Hash.new
+        earnings_labels.each do |s|
+            final_hash[s]=Array.new
+        end
+        
+        arr.each do |a|
+            a.each do |h|
+                h.each do |k,v|
+                    final_hash[k] << v
+                end
+            end
+        end
+        df=Daru::DataFrame.new(final_hash, order: earnings_labels)
+        #puts(df.inspect(spacing=20, threshold=25))
+        pdf = Wisepdf::Writer.new.to_pdf(df.to_html)
+        File.open("earnings.pdf", 'wb') do |file|
+            file << pdf
+        end
     end
 
     private
