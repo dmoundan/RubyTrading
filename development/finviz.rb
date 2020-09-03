@@ -11,7 +11,7 @@ class Finviz
     Base_url="https://finviz.com/"
 
     def weeklyEarnings(intersect_list, period="next_week")
-        earnings_labels=[:date, :ticker, :time, :sfloat, :atr, :beta]
+        earnings_labels=[:date, :ticker, :sector, :industry, :country, :time, :sfloat, :atr, :beta]
         earningsNextWeek = Set.new
         scraper_EarnnigsNextWeek(earningsNextWeek, period)
         puts(earningsNextWeek.count)
@@ -117,6 +117,16 @@ class Finviz
         unparsed_page=HTTParty.get(url)
         parsed_page=Nokogiri::HTML(unparsed_page)
         h1=Hash.new
+        industry=""
+        sector=""
+        country=""
+        parsed_page.css(".fullview-title").search('tr').each do |tr|
+            cells = tr.search('th, td') 
+            cells.each do |cell|
+                text = cell.text.strip
+                sector, industry, country=text.split(' | ')
+            end
+        end
         date=""
         time=""
         atr=""
@@ -150,7 +160,10 @@ class Finviz
                 sfloat: sfloat,
                 atr: atr,
                 beta: beta,
-                ticker: ticker
+                ticker: ticker,
+                sector: sector,
+                industry: industry,
+                country:country
             }
         return h1    
     end

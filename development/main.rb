@@ -15,16 +15,23 @@ require './development/finviz.rb'
 Text_file_path="./Collateral"
 DB_path="./GeneratedDBs"
 Data_path="./GeneratedData"
+Historical_data_DB="historical_data.db"
+Timeframes = ["daily", "weekly", "monthly"]
 
 def main()
 
     list1=Set.new
+    start_date=""
+    end_date=""
 
     options = Slop.parse do |opts|
         opts.string '-a', '--read_text_file', 'Parse a list of symbols in a text file'
-        opts.string '-b', '--timeframe', 'Provide a timeframe [1d, 1wk, 1mo]'
+        opts.string '-b', '--timeframe', 'Provide a timeframe [1d, 1wk, 1mo all]'
         opts.string '-c', '--earnings', 'Discover earnings for [this_week, next_week, this_month]'
         opts.string '-d', '--intersect_with', 'Intersect earnings names with [text_file]'
+        opts.string '-f', '--start_date', 'Start Date yyyy-mm-dd'
+        opts.string '-g', '--end_date', 'End  Date yyyy-mm-dd'
+        opts.bool '-e', '--create_historical_data_db'
         opts.bool '-h', '--help', 'Print this help message'
     end
 
@@ -35,7 +42,46 @@ def main()
 
     if options[:read_text_file]
         read_text_file(Text_file_path+"/"+options[:read_text_file], list1)
-        puts(list1)
+        #sputs(list1)
+    end
+
+    if options[:start_date]
+        start_date=options[:start_date]
+    end
+
+    if options[:end_date]
+        end_date=options[:end_date]
+    end
+
+    if options[:create_historical_data_db]
+        if !options[:read_text_file]
+            puts("We need a way to come up with a list of tickers to create the db for. Exiting.")
+            exit(1)
+        end
+        filename=DB_path+"/"+Historical_data_DB
+        if File.exists? filename
+            File.delete(filename)
+        end
+        db=DataBase.new(DB_path, Historical_data_DB)
+        Timeframes.each do |tf|
+            tf1=""
+            case tf
+                when "daily"
+                    tf1="1d"
+                when "weekly"
+                    tf1="1wk"
+                when "monthly"
+                    tf1="1mo"
+                else
+                    puts("Not supported timeframe. Exiting.")
+                    exit(1)
+            end
+            list1.each do |ticker|
+                acc=YF.new(ticker, start_date, end_date, "1d")
+                df=acc.get_prices_short()
+                puts(df.inspect())
+            end
+        end
     end
 
     if options[:intersect_with]
