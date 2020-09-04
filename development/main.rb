@@ -4,6 +4,7 @@ $VERBOSE=nil
 
 require 'slop'
 require 'set'
+require 'progress_bar'
 
 
 require "./development/yf.rb"
@@ -76,12 +77,22 @@ def main()
                     puts("Not supported timeframe. Exiting.")
                     exit(1)
             end
+            bar=ProgressBar.new(list1.count)
             list1.each do |ticker|
-                acc=YF.new(ticker, start_date, end_date, "1d")
+                puts(ticker)
+                tbl=ticker.downcase+"_"+tf
+                acc=YF.new(ticker, start_date, end_date, tf1)
                 df=acc.get_prices_short()
-                puts(df.inspect())
+                df1=augment_dataframe_with_id(df)
+                sql=df1.create_sql(tbl)
+                puts(sql)
+                db.create_table(sql)
+                db.initialize_table(df1, tbl)
+                #puts(df11.inspect())
+                bar.increment!
             end
         end
+        db.close()
     end
 
     if options[:intersect_with]
