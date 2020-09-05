@@ -24,6 +24,7 @@ def main()
     list1=Set.new
     start_date=""
     end_date=""
+    method=""
 
     options = Slop.parse do |opts|
         opts.string '-a', '--read_text_file', 'Parse a list of symbols in a text file'
@@ -32,14 +33,21 @@ def main()
         opts.string '-d', '--intersect_with', 'Intersect earnings names with [text_file]'
         opts.string '-f', '--start_date', 'Start Date yyyy-mm-dd'
         opts.string '-g', '--end_date', 'End  Date yyyy-mm-dd'
-        opts.bool '-e', '--create_historical_data_db'
-        opts.bool '-h', '--help', 'Print this help message'
+        opts.bool   '-e', '--create_historical_data_db', 'Create the DB with historical prices'
+        opts.bool   '-i', '--update_historical_data_db', 'Update the DB with historical prices'
+        opts.string '-j', '--method', 'Use one of three methods [scrape, json, csv] to get the prices frpm YF'
+        opts.bool   '-h', '--help', 'Print this help message'
     end
 
     if options[:help]
         puts(options)
         exit()
     end
+
+    if options[:method]
+        method = options[:method]
+    end
+
 
     if options[:read_text_file]
         read_text_file(Text_file_path+"/"+options[:read_text_file], list1)
@@ -65,6 +73,7 @@ def main()
         end
         db=DataBase.new(DB_path, Historical_data_DB)
         Timeframes.each do |tf|
+            puts("Creating the DB tables for the #{tf} timeframe ...")
             tf1=""
             case tf
                 when "daily"
@@ -79,13 +88,25 @@ def main()
             end
             bar=ProgressBar.new(list1.count)
             list1.each do |ticker|
-                puts(ticker)
+                #puts(ticker)
                 tbl=ticker.downcase+"_"+tf
                 acc=YF.new(ticker, start_date, end_date, tf1)
-                df=acc.get_prices_short()
+                case method
+                    when "json" 
+                        df=acc.get_prices_long()
+                    when "scrape"
+                        df=acc.get_prices_short()
+                    when "cvs"
+                        puts("This is not implemented yet, reverting to the json method")
+                        df=acc.get_prices_long()
+                    else
+                        puts("Not supported method. Exiting.")
+                        exit(1)
+                end
+                #puts(df.inspect())
                 df1=augment_dataframe_with_id(df)
                 sql=df1.create_sql(tbl)
-                puts(sql)
+                #puts(sql)
                 db.create_table(sql)
                 db.initialize_table(df1, tbl)
                 #puts(df11.inspect())
