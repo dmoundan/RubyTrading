@@ -25,15 +25,19 @@ def main()
     start_date=""
     end_date=""
     method=""
+    timeframe=""
+    
+    
 
     options = Slop.parse do |opts|
         opts.string '-a', '--read_text_file', 'Parse a list of symbols in a text file'
-        opts.string '-b', '--timeframe', 'Provide a timeframe [1d, 1wk, 1mo all]'
+        opts.string '-b', '--timeframe', 'Provide a timeframe [daily, weekly, monthly, all]'
         opts.string '-c', '--earnings', 'Discover earnings for [this_week, next_week, this_month]'
         opts.string '-d', '--intersect_with', 'Intersect earnings names with [text_file]'
         opts.string '-f', '--start_date', 'Start Date yyyy-mm-dd'
         opts.string '-g', '--end_date', 'End  Date yyyy-mm-dd'
         opts.bool   '-e', '--create_historical_data_db', 'Create the DB with historical prices'
+        opts.bool   '-k', '--add_to_historical_data_db', 'Add more names to the  DB with historical prices'
         opts.bool   '-i', '--update_historical_data_db', 'Update the DB with historical prices'
         opts.string '-j', '--method', 'Use one of three methods [scrape, json, csv] to get the prices frpm YF'
         opts.bool   '-h', '--help', 'Print this help message'
@@ -48,6 +52,9 @@ def main()
         method = options[:method]
     end
 
+    if options[:timeframe]
+        timeframe=options[:timeframe]
+    end
 
     if options[:read_text_file]
         read_text_file(Text_file_path+"/"+options[:read_text_file], list1)
@@ -68,9 +75,11 @@ def main()
             exit(1)
         end
         filename=DB_path+"/"+Historical_data_DB
-        if File.exists? filename
-            File.delete(filename)
-        end
+        if ! options[:add_to_historical_data_db]
+            if File.exists? filename
+                File.delete(filename)
+            end
+        end    
         db=DataBase.new(DB_path, Historical_data_DB)
         Timeframes.each do |tf|
             puts("Creating the DB tables for the #{tf} timeframe ...")
@@ -114,6 +123,18 @@ def main()
             end
         end
         db.close()
+    end
+
+    if options[:update_historical_data_db]
+        #First we need to get a list of tickers currently present in the database
+        db=DataBase.new(DB_path, Historical_data_DB)
+        df=db.get_db_table_names()
+        r = []
+        df.each(:row) do |row|
+            r << row["tbl_name"] if row["tbl_name"].include? "_daily"
+        end
+        r.map!{|x| x.gsub("_daily","")}
+        #Now we need to get the new values for all tickers on this list
     end
 
     if options[:intersect_with]

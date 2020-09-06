@@ -50,6 +50,12 @@ class DataBase
         return df
    end
 
+   def get_db_table_names()
+        results=@db.execute("SELECT tbl_name FROM sqlite_master WHERE type = \'table\'")
+        df=Daru::DataFrame.new(results)
+        return df
+   end
+
    def close()
         @db.close if @db
    end
